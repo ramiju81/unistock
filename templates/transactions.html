@@ -1,0 +1,55 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>Transacciones</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('dashboard') }}">Inicio</a>
+        <a href="{{ url_for('products') }}">Productos</a>
+        <a href="{{ url_for('stock') }}">Stock</a>
+        <a href="{{ url_for('transactions') }}">Transacciones</a>
+        <a href="{{ url_for('profitability') }}">Rentabilidad</a>
+        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+    </nav>
+    <div class="container">
+        <h2>Registrar Transacción</h2>
+        <form method="POST">
+            <label>Producto:</label>
+            <select name="product_id" required>
+                {% for product in products %}
+                <option value="{{ product.id }}">{{ product.name }}</option>
+                {% endfor %}
+            </select>
+            <label>Cantidad:</label>
+            <input type="number" name="quantity" required>
+            <label>Tipo:</label>
+            <select name="type" required>
+                <option value="sale">Venta</option>
+                <option value="purchase">Compra</option>
+            </select>
+            <button type="submit">Registrar</button>
+        </form>
+        <h3>Historial de Transacciones</h3>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Producto</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Fecha</th>
+            </tr>
+            {% for trans in transactions %}
+            <tr>
+                <td>{{ trans.id }}</td>
+                <td>{{ trans.name }}</td>
+                <td>{{ trans.type }}</td>
+                <td>{{ trans.quantity }}</td>
+                <td>{{ trans.date }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

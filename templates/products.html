@@ -1,0 +1,58 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Productos{% endblock %}
+
+{% block content %}
+<section class="crud-section">
+    <div class="section-header">
+        <h2>Gestión de Productos</h2>
+        <button class="btn-primary" onclick="toggleForm()">+ Nuevo Producto</button>
+    </div>
+
+    <form id="product-form" method="POST" style="display: none;">
+        <!-- Formulario de productos -->
+    </form>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>{{ product.id }}</td>
+                    <td>{{ product.name }}</td>
+                    <td>${{ product.price }}</td>
+                    <td class="{{ 'low-stock' if product.stock < product.min_stock else '' }}">
+                        {{ product.stock }}
+                    </td>
+                    <td>
+                        <button class="btn-sm" onclick="editProduct({{ product.id }})">Editar</button>
+                        <form method="POST" style="display:inline;">
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <button type="submit" class="btn-sm danger">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% block extra_js %}
+<script>
+function toggleForm() {
+    const form = document.getElementById('product-form');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+{% endblock %}
+{% endblock %}

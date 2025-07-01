@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}UniStock{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">UniStock</div>
+            <ul>
+                <li><a href="{{ url_for('dashboard') }}"><i class="icon-home"></i> Inicio</a></li>
+                <li><a href="{{ url_for('products') }}"><i class="icon-box"></i> Productos</a></li>
+                <li><a href="{{ url_for('stock') }}"><i class="icon-database"></i> Stock</a></li>
+                <li><a href="{{ url_for('sales') }}"><i class="icon-shopping-cart"></i> Ventas</a></li>
+                <li><a href="{{ url_for('purchases') }}"><i class="icon-truck"></i> Compras</a></li>
+                <li><a href="{{ url_for('reports') }}"><i class="icon-bar-chart"></i> Reportes</a></li>
+            </ul>
+            <div class="user-menu">
+                <span>{{ current_user.username }}</span>
+                <a href="{{ url_for('logout') }}"><i class="icon-log-out"></i></a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

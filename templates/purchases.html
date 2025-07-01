@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Compras</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('dashboard') }}">Inicio</a>
+        <a href="{{ url_for('products') }}">Productos</a>
+        <a href="{{ url_for('stock') }}">Stock</a>
+        <a href="{{ url_for('sales') }}">Ventas</a>
+        <a href="{{ url_for('purchases') }}">Compras</a>
+        <a href="{{ url_for('customers') }}">Clientes</a>
+        <a href="{{ url_for('suppliers') }}">Proveedores</a>
+        <a href="{{ url_for('reports') }}">Reportes</a>
+        <a href="{{ url_for('settings') }}">Configuración</a>
+        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+    </nav>
+    <div class="container">
+        <h2>Registro de Compras</h2>
+        
+        <form method="POST" class="purchase-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Proveedor:</label>
+                    <select name="supplier_id" required>
+                        <option value="">Seleccionar proveedor</option>
+                        {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}">{{ supplier.name }} ({{ supplier.tax_id }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fecha:</label>
+                    <input type="date" name="date" value="{{ today }}" required>
+                </div>
+            </div>
+            
+            <h3>Productos</h3>
+            <div id="purchaseItems">
+                <div class="purchase-item">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Producto:</label>
+                            <select name="product_id[]" required>
+                                <option value="">Seleccionar producto</option>
+                                {% for product in products %}
+                                <option value="{{ product.id }}">{{ product.name }}</option>
+                                {% endfor %}
+                                <option value="new">+ Nuevo Producto</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Cantidad:</label>
+                            <input type="number" name="quantity[]" min="1" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Precio Unitario:</label>
+                            <input type="number" step="0.01" name="price[]" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Subtotal:</label>
+                            <span class="subtotal">$0.00</span>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" class="remove-item" onclick="removePurchaseItem(this)" style="display:none;">×</button>
+                        </div>
+                    </div>
+                    <div class="new-product-fields" style="display:none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nombre Nuevo Producto:</label>
+                                <input type="text" name="new_product_name[]">
+                            </div>
+                            <div class="form-group">
+                                <label>Precio de Venta:</label>
+                                <input type="number" step="0.01" name="new_product_sale_price[]">
+                            </div>
+                            <div class="form-group">
+                                <label>Stock Mínimo:</label>
+                                <input type="number" name="new_product_min_stock[]" value="5">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="button" class="add-item-btn" onclick="addPurchaseItem()">+ Agregar Producto</button>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Método de Pago:</label>
+                    <select name="payment_method" required>
+                        <option value="cash">Efectivo</option>
+                        <option value="credit">Crédito</option>
+                        <option value="transfer">Transferencia</option>
+                        <option value="check">Cheque</option>
+                        <option value="other">Otro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Total:</label>
+                    <span id="totalAmount">$0.00</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Factura/Recibo:</label>
+                <input type="text" name="invoice_number">
+            </div>
+            
+            <div class="form-group">
+                <label>Notas:</label>
+                <textarea name="notes"></textarea>
+            </div>
+            
+            <button type="submit" name="save_purchase">Registrar Compra</button>
+        </form>
+        
+        <h3>Historial de Compras</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Proveedor</th>
+                    <th>Productos</th>
+                    <th>Total</th>
+                    <th>Factura</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for purchase in purchases %}
+                <tr>
+                    <td>{{ purchase.id }}</td>
+                    <td>{{ purchase.date }}</td>
+                    <td>{{ purchase.supplier_name }}</td>
+                    <td>
+                        <ul class="product-list">
+                            {% for item in purchase.items %}
+                            <li>{{ item.quantity }} x {{ item.product_name }} (${{ item.price }})</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>${{ purchase.total }}</td>
+                    <td>{{ purchase.invoice_number or 'N/A' }}</td>
+                    <td>
+                        <button onclick="viewPurchaseDetails({{ purchase.id }})">Ver</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        // Muestra campos para nuevo producto cuando se selecciona "Nuevo Producto"
+        document.addEventListener('DOMContentLoaded', function() {
+            const productSelects = document.querySelectorAll('select[name="product_id[]"]');
+            productSelects.forEach(select => {
+                select.addEventListener('change', function() {
+                    const newProductFields = this.closest('.purchase-item').querySelector('.new-product-fields');
+                    if (this.value === 'new') {
+                        newProductFields.style.display = 'block';
+                    } else {
+                        newProductFields.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Calcula subtotal cuando cambia cantidad o precio
+            const quantityInputs = document.querySelectorAll('input[name="quantity[]"]');
+            quantityInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    calculateSubtotal(this.closest('.purchase-item'));
+                });
+            });
+            
+            const priceInputs = document.querySelectorAll('input[name="price[]"]');
+            priceInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    calculateSubtotal(this.closest('.purchase-item'));
+                });
+            });
+            
+            // Calcula total inicial
+            calculateTotal();
+        });
+        
+        function calculateSubtotal(item) {
+            const quantity = parseFloat(item.querySelector('input[name="quantity[]"]').value) || 0;
+            const price = parseFloat(item.querySelector('input[name="price[]"]').value) || 0;
+            const subtotal = quantity * price;
+            item.querySelector('.subtotal').textContent = '$' + subtotal.toFixed(2);
+            calculateTotal();
+        }
+        
+        function calculateTotal() {
+            let total = 0;
+            document.querySelectorAll('.purchase-item').forEach(item => {
+                const subtotalText = item.querySelector('.subtotal').textContent;
+                const subtotal = parseFloat(subtotalText.replace('$', '')) || 0;
+                total += subtotal;
+            });
+            document.getElementById('totalAmount').textContent = '$' + total.toFixed(2);
+        }
+        
+        function addPurchaseItem() {
+            const purchaseItems = document.getElementById('purchaseItems');
+            const newItem = purchaseItems.firstElementChild.cloneNode(true);
+            
+            // Limpiar valores del nuevo item
+            newItem.querySelector('select[name="product_id[]"]').selectedIndex = 0;
+            newItem.querySelector('input[name="quantity[]"]').value = 1;
+            newItem.querySelector('input[name="price[]"]').value = '';
+            newItem.querySelector('.subtotal').textContent = '$0.00';
+            newItem.querySelector('.remove-item').style.display = 'inline-block';
+            newItem.querySelector('.new-product-fields').style.display = 'none';
+            newItem.querySelector('input[name="new_product_name[]"]').value = '';
+            newItem.querySelector('input[name="new_product_sale_price[]"]').value = '';
+            newItem.querySelector('input[name="new_product_min_stock[]"]').value = '5';
+            
+            // Agregar event listeners al nuevo item
+            newItem.querySelector('select[name="product_id[]"]').addEventListener('change', function() {
+                const newProductFields = this.closest('.purchase-item').querySelector('.new-product-fields');
+                if (this.value === 'new') {
+                    newProductFields.style.display = 'block';
+                } else {
+                    newProductFields.style.display = 'none';
+                }
+            });
+            
+            newItem.querySelector('input[name="quantity[]"]').addEventListener('input', function() {
+                calculateSubtotal(this.closest('.purchase-item'));
+            });
+            
+            newItem.querySelector('input[name="price[]"]').addEventListener('input', function() {
+                calculateSubtotal(this.closest('.purchase-item'));
+            });
+            
+            purchaseItems.appendChild(newItem);
+        }
+        
+        function removePurchaseItem(button) {
+            const item = button.closest('.purchase-item');
+            item.remove();
+            calculateTotal();
+        }
+        
+        function viewPurchaseDetails(purchaseId) {
+            // Aquí podrías implementar una ventana modal o redirección para ver detalles completos
+            alert('Mostrando detalles de la compra ID: ' + purchaseId);
+        }
+    </script>
+</body>
+</html>

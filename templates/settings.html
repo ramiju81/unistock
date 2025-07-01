@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Configuración</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('dashboard') }}">Inicio</a>
+        <a href="{{ url_for('products') }}">Productos</a>
+        <a href="{{ url_for('stock') }}">Stock</a>
+        <a href="{{ url_for('transactions') }}">Transacciones</a>
+        <a href="{{ url_for('profitability') }}">Rentabilidad</a>
+        <a href="{{ url_for('settings') }}">Configuración</a>
+        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+    </nav>
+    <div class="container">
+        <h2>Configuración</h2>
+        
+        <div class="settings-tabs">
+            <button class="tab-button active" onclick="openTab(event, 'user-settings')">Usuario</button>
+            <button class="tab-button" onclick="openTab(event, 'business-settings')">Negocio</button>
+            <button class="tab-button" onclick="openTab(event, 'security-settings')">Seguridad</button>
+        </div>
+        
+        <!-- Configuración de Usuario -->
+        <div id="user-settings" class="tab-content" style="display: block;">
+            <h3>Datos Personales</h3>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="form_type" value="user_info">
+                <div class="avatar-container">
+                    <img src="{{ current_user.avatar_url or url_for('static', filename='images/default-avatar.png') }}" alt="Avatar" class="avatar">
+                    <input type="file" name="avatar" accept="image/*">
+                </div>
+                <label>Nombre:</label>
+                <input type="text" name="name" value="{{ current_user.username }}">
+                <label>Correo Electrónico:</label>
+                <input type="email" name="email" value="{{ current_user.email }}">
+                <label>Teléfono:</label>
+                <input type="tel" name="phone" value="{{ current_user.phone or '' }}">
+                <button type="submit">Guardar Cambios</button>
+            </form>
+        </div>
+        
+        <!-- Configuración de Negocio -->
+        <div id="business-settings" class="tab-content">
+            <h3>Información del Negocio</h3>
+            <form method="POST">
+                <input type="hidden" name="form_type" value="business_info">
+                <label>Nombre del Negocio:</label>
+                <input type="text" name="business_name" value="{{ business_info.name or '' }}">
+                <label>Dirección:</label>
+                <input type="text" name="address" value="{{ business_info.address or '' }}">
+                <label>Teléfono:</label>
+                <input type="tel" name="business_phone" value="{{ business_info.phone or '' }}">
+                <label>RUC/NIT:</label>
+                <input type="text" name="tax_id" value="{{ business_info.tax_id or '' }}">
+                <label>Mensaje en Factura:</label>
+                <textarea name="invoice_message">{{ business_info.invoice_message or '' }}</textarea>
+                <button type="submit">Guardar Cambios</button>
+            </form>
+        </div>
+        
+        <!-- Configuración de Seguridad -->
+        <div id="security-settings" class="tab-content">
+            <h3>Cambiar Contraseña</h3>
+            <form method="POST">
+                <input type="hidden" name="form_type" value="change_password">
+                <label>Contraseña Actual:</label>
+                <input type="password" name="current_password" required>
+                <label>Nueva Contraseña:</label>
+                <input type="password" name="new_password" required>
+                <label>Confirmar Nueva Contraseña:</label>
+                <input type="password" name="confirm_password" required>
+                <button type="submit">Cambiar Contraseña</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function openTab(evt, tabName) {
+            // Oculta todos los contenidos de pestañas
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].style.display = "none";
+            }
+            
+            // Desactiva todos los botones de pestaña
+            const tabButtons = document.getElementsByClassName("tab-button");
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].className = tabButtons[i].className.replace(" active", "");
+            }
+            
+            // Muestra la pestaña actual y activa el botón
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+    </script>
+</body>
+</html>

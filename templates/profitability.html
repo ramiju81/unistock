@@ -1,0 +1,30 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>Rentabilidad</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('dashboard') }}">Inicio</a>
+        <a href="{{ url_for('products') }}">Productos</a>
+        <a href="{{ url_for('stock') }}">Stock</a>
+        <a href="{{ url_for('transactions') }}">Transacciones</a>
+        <a href="{{ url_for('profitability') }}">Rentabilidad</a>
+        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+    </nav>
+    <div class="container">
+        <h2>Rentabilidad</h2>
+        <form method="GET">
+            <label>Período:</label>
+            <select name="period">
+                <option value="day" {% if period == 'day' %}selected{% endif %}>Día</option>
+                <option value="week" {% if period == 'week' %}selected{% endif %}>Semana</option>
+                <option value="month" {% if period == 'month' %}selected{% endif %}>Mes</option>
+            </select>
+            <button type="submit">Filtrar</button>
+        </form>
+        <h3>Ingresos Totales: ${{ total_income }}</h3>
+    </div>
+</body>
+</html>

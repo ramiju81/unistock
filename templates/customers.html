@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clientes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('dashboard') }}">Inicio</a>
+        <a href="{{ url_for('products') }}">Productos</a>
+        <a href="{{ url_for('stock') }}">Stock</a>
+        <a href="{{ url_for('sales') }}">Ventas</a>
+        <a href="{{ url_for('purchases') }}">Compras</a>
+        <a href="{{ url_for('customers') }}">Clientes</a>
+        <a href="{{ url_for('suppliers') }}">Proveedores</a>
+        <a href="{{ url_for('reports') }}">Reportes</a>
+        <a href="{{ url_for('settings') }}">Configuración</a>
+        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+    </nav>
+    <div class="container">
+        <h2>Gestión de Clientes</h2>
+        
+        <form method="POST" class="customer-form">
+            <input type="hidden" name="id">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre:</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>Identificación:</label>
+                    <input type="text" name="identification" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Teléfono:</label>
+                    <input type="tel" name="phone">
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" name="email">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Dirección:</label>
+                <input type="text" name="address">
+            </div>
+            <div class="form-buttons">
+                <button type="submit" name="add">Agregar Cliente</button>
+                <button type="submit" name="edit" style="display:none;">Guardar Cambios</button>
+                <button type="button" name="cancel" onclick="resetForm()" style="display:none;">Cancelar</button>
+            </div>
+        </form>
+        
+        <div class="search-container">
+            <input type="text" id="customerSearch" placeholder="Buscar cliente..." onkeyup="searchCustomers()">
+        </div>
+        
+        <table id="customersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Identificación</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td>{{ customer.id }}</td>
+                    <td>{{ customer.name }}</td>
+                    <td>{{ customer.identification }}</td>
+                    <td>{{ customer.phone }}</td>
+                    <td>{{ customer.email }}</td>
+                    <td>
+                        <button onclick="editCustomer({{ customer.id }}, '{{ customer.name }}', '{{ customer.identification }}', '{{ customer.phone }}', '{{ customer.email }}', '{{ customer.address }}')">Editar</button>
+                        <form method="POST" style="display:inline;">
+                            <input type="hidden" name="id" value="{{ customer.id }}">
+                            <button type="submit" name="delete" onclick="return confirm('¿Eliminar este cliente?')">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        function editCustomer(id, name, identification, phone, email, address) {
+            const form = document.querySelector('.customer-form');
+            form.querySelector('input[name="id"]').value = id;
+            form.querySelector('input[name="name"]').value = name;
+            form.querySelector('input[name="identification"]').value = identification;
+            form.querySelector('input[name="phone"]').value = phone;
+            form.querySelector('input[name="email"]').value = email;
+            form.querySelector('input[name="address"]').value = address;
+            
+            form.querySelector('button[name="add"]').style.display = 'none';
+            form.querySelector('button[name="edit"]').style.display = 'inline-block';
+            form.querySelector('button[name="cancel"]').style.display = 'inline-block';
+        }
+        
+        function resetForm() {
+            const form = document.querySelector('.customer-form');
+            form.reset();
+            form.querySelector('input[name="id"]').value = '';
+            
+            form.querySelector('button[name="add"]').style.display = 'inline-block';
+            form.querySelector('button[name="edit"]').style.display = 'none';
+            form.querySelector('button[name="cancel"]').style.display = 'none';
+        }
+        
+        function searchCustomers() {
+            const input = document.getElementById('customerSearch');
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById('customersTable');
+            const tr = table.getElementsByTagName('tr');
+            
+            for (let i = 1; i < tr.length; i++) {
+                const td = tr[i].getElementsByTagName('td');
+                let found = false;
+                
+                for (let j = 0; j < td.length - 1; j++) { // Excluye la columna de acciones
+                    if (td[j]) {
+                        if (td[j].textContent.toUpperCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                
+                tr[i].style.display = found ? '' : 'none';
+            }
+        }
+    </script>
+</body>
+</html>

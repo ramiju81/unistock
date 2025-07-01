@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reportes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('dashboard') }}">Inicio</a>
+        <a href="{{ url_for('products') }}">Productos</a>
+        <a href="{{ url_for('stock') }}">Stock</a>
+        <a href="{{ url_for('sales') }}">Ventas</a>
+        <a href="{{ url_for('purchases') }}">Compras</a>
+        <a href="{{ url_for('customers') }}">Clientes</a>
+        <a href="{{ url_for('suppliers') }}">Proveedores</a>
+        <a href="{{ url_for('reports') }}">Reportes</a>
+        <a href="{{ url_for('settings') }}">Configuración</a>
+        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+    </nav>
+    <div class="container">
+        <h2>Reportes</h2>
+        
+        <div class="report-filters">
+            <form method="GET">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Fecha Inicio:</label>
+                        <input type="date" name="start_date" value="{{ start_date }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Fin:</label>
+                        <input type="date" name="end_date" value="{{ end_date }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Reporte:</label>
+                        <select name="report_type">
+                            <option value="sales" {% if report_type == 'sales' %}selected{% endif %}>Ventas</option>
+                            <option value="purchases" {% if report_type == 'purchases' %}selected{% endif %}>Compras</option>
+                            <option value="profitability" {% if report_type == 'profitability' %}selected{% endif %}>Rentabilidad</option>
+                            <option value="inventory" {% if report_type == 'inventory' %}selected{% endif %}>Inventario</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit">Generar Reporte</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        {% if report_type == 'sales' %}
+        <div class="report-section">
+            <h3>Reporte de Ventas</h3>
+            <div class="chart-container">
+                <canvas id="salesChart"></canvas>
+            </div>
+            
+            <div class="summary-cards">
+                <div class="card">
+                    <h4>Ventas Totales</h4>
+                    <p>${{ sales_summary.total_sales }}</p>
+                </div>
+                <div class="card">
+                    <h4>Número de Ventas</h4>
+                    <p>{{ sales_summary.sales_count }}</p>
+                </div>
+                <div class="card">
+                    <h4>Producto Más Vendido</h4>
+                    <p>{{ sales_summary.top_product.name }} ({{ sales_summary.top_product.quantity }} unidades)</p>
+                </div>
+                <div class="card">
+                    <h4>Mejor Cliente</h4>
+                    <p>{{ sales_summary.top_customer.name }} (${{ sales_summary.top_customer.amount }})</p>
+                </div>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Productos</th>
+                        <th>Cantidad</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales_data %}
+                    <tr>
+                        <td>{{ sale.date }}</td>
+                        <td>{{ sale.customer_name or 'Cliente ocasional' }}</td>
+                        <td>
+                            <ul class="product-list">
+                                {% for item in sale.items %}
+                                <li>{{ item.product_name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td>{{ sale.total_quantity }}</td>
+                        <td>${{ sale.total_amount }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <script>
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            const salesChart = new Chart(salesCtx, {
+                type: 'bar',
+                data: {
+                    labels: {{ sales_chart_labels | tojson }},
+                    datasets: [{
+                        label: 'Ventas por Día',
+                        data: {{ sales_chart_data | tojson }},
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        </script>
+        {% endif %}
+        
+        {% if report_type == 'purchases' %}
+        <div class="report-section">
+            <h3>Reporte de Compras</h3>
+            <div class="chart-container">
+                <canvas id="purchasesChart"></canvas>
+            </div>
+            
+            <div class="summary-cards">
+                <div class="card">
+                    <h4>Compras Totales</h4>
+                    <p>${{ purchases_summary.total_purchases }}</p>
+                </div>
+                <div class="card">
+                    <h4>Número de Compras</h4>
+                    <p>{{ purchases_summary.purchases_count }}</p>
+                </div>
+                <div class="card">
+                    <h4>Producto Más Comprado</h4>
+                    <p>{{ purchases_summary.top_product.name }} ({{ purchases_summary.top_product.quantity }} unidades)</p>
+                </div>
+                <div class="card">
+                    <h4>Proveedor Principal</h4>
+                    <p>{{ purchases_summary.top_supplier.name }} (${{ purchases_summary.top_supplier.amount }})</p>
+                </div>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Proveedor</th>
+                        <th>Productos</th>
+                        <th>Cantidad</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for purchase in purchases_data %}
+                    <tr>
+                        <td>{{ purchase.date }}</td>
+                        <td>{{ purchase.supplier_name }}</td>
+                        <td>
+                            <ul class="product-list">
+                                {% for item in purchase.items %}
+                                <li>{{ item.product_name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td>{{ purchase.total_quantity }}</td>
+                        <td>${{ purchase.total_amount }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <script>
+            const purchasesCtx = document.getElementById('purchasesChart').getContext('2d');
+            const purchasesChart = new Chart(purchasesCtx, {
+                type: 'bar',
+                data: {
+                    labels: {{ purchases_chart_labels | tojson }},
+                    datasets: [{
+                        label: 'Compras por Día',
+                        data: {{ purchases_chart_data | tojson }},
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        </script>
+        {% endif %}
+        
+        {% if report_type == 'profitability' %}
+        <div class="report-section">
+            <h3>Reporte de Rentabilidad</h3>
+            <div class="chart-container">
+                <canvas id="profitabilityChart"></canvas>
+            </div>
+            
+            <div class="summary-cards">
+                <div class="card">
+                    <h4>Ingresos Totales</h4>
+                    <p>${{ profitability_summary.total_income }}</p>
+                </div>
+                <div class="card">
+                    <h4>Gastos Totales</h4>
+                    <p>${{ profitability_summary.total_expenses }}</p>
+                </div>
+                <div class="card">
+                    <h4>Utilidad Bruta</h4>
+                    <p>${{ profitability_summary.gross_profit }}</p>
+                </div>
+                <div class="card">
+                    <h4>Margen de Ganancia</h4>
+                    <p>{{ profitability_summary.profit_margin }}%</p>
+                </div>
+            </div>
+            
+            <h4>Productos Más Rentables</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Ventas</th>
+                        <th>Costo</th>
+                        <th>Utilidad</th>
+                        <th>Margen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in profitability_summary.top_products %}
+                    <tr>
+                        <td>{{ product.name }}</td>
+                        <td>${{ product.sales }}</td>
+                        <td>${{ product.cost }}</td>
+                        <td>${{ product.profit }}</td>
+                        <td>{{ product.margin }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <script>
+            const profitabilityCtx = document.getElementById('profitabilityChart').getContext('2d');
+            const profitabilityChart = new Chart(profitabilityCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ profitability_chart_labels | tojson }},
+                    datasets: [
+                        {
+                            label: 'Ingresos',
+                            data: {{ profitability_chart_income | tojson }},
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 2,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Gastos',
+                            data: {{ profitability_chart_expenses | tojson }},
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 2,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Utilidad',
+                            data: {{ profitability_chart_profit | tojson }},
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        </script>
+        {% endif %}
+        
+        {% if report_type == 'inventory' %}
+        <div class="report-section">
+            <h3>Reporte de Inventario</h3>
+            <div class="chart-container">
+                <canvas id="inventoryChart"></canvas>
+            </div>
+            
+            <div class="summary-cards">
+                <div class="card">
+                    <h4>Valor Total del Inventario</h4>
+                    <p>${{ inventory_summary.total_value }}</p>
+                </div>
+                <div class="card">
+                    <h4>Productos en Stock</h4>
+                    <p>{{ inventory_summary.total_products }}</p>
+                </div>
+                <div class="card">
+                    <h4>Productos con Bajo Stock</h4>
+                    <p>{{ inventory_summary.low_stock_count }}</p>
+                </div>
+                <div class="card">
+                    <h4>Productos sin Stock</h4>
+                    <p>{{ inventory_summary.out_of_stock_count }}</p>
+                </div>
+            </div>
+            
+            <h4>Productos con Bajo Stock</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Stock Actual</th>
+                        <th>Stock Mínimo</th>
+                        <th>Diferencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in inventory_summary.low_stock_products %}
+                    <tr>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.stock }}</td>
+                        <td>{{ product.min_stock }}</td>
+                        <td>{{ product.difference }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <h4>Movimiento de Inventario</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Entradas</th>
+                        <th>Salidas</th>
+                        <th>Stock Actual</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movement in inventory_summary.movements %}
+                    <tr>
+                        <td>{{ movement.name }}</td>
+                        <td>{{ movement.incoming }}</td>
+                        <td>{{ movement.outgoing }}</td>
+                        <td>{{ movement.current_stock }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <script>
+            const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
+            const inventoryChart = new Chart(inventoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Stock Normal', 'Bajo Stock', 'Sin Stock'],
+                    datasets: [{
+                        data: [
+                            {{ inventory_summary.normal_stock_count }},
+                            {{ inventory_summary.low_stock_count }},
+                            {{ inventory_summary.out_of_stock_count }}
+                        ],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(255, 206, 86, 0.5)',
+                            'rgba(255, 99, 132, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        </script>
+        {% endif %}
+    </div>
+</body>
+</html>
