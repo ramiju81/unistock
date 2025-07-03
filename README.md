@@ -14,7 +14,7 @@ Solución tecnológica propietaria desarrollada por **WoMo Studio** para gestió
 - Reportes ejecutivos y análisis de datos
 - Seguridad por roles y permisos granular
 
-## 🛠 Tecnologías Clave
+## 🛠 Stack Tecnológico
 
 **Backend Avanzado:**
 - Arquitectura en Python con Flask/Django
