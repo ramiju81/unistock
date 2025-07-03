@@ -95,5 +95,5 @@ Este sistema demuestra capacidades avanzadas en:
 
 
 📅 **Control de Versiones**  
-🔹 Versión actual: 2.1.0  
-🔹 Última actualización: Julio 2025
+📅 ![Versión](https://img.shields.io/badge/Versión-1.2.0-blue)  
+🔄 ![Última Actualización](https://img.shields.io/badge/Actualizado-Jun_2025-green)
