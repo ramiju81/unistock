@@ -22,7 +22,7 @@ Solución tecnológica propietaria desarrollada por **WoMo Studio** para gestió
 - PostgreSQL para gestión de datos complejos
 - Redis para caché y sesiones
 
-**Frontend Profesional:**
+**Frontend:**
 - Diseño responsive con Bootstrap 5
 - Gráficos interactivos con Chart.js
 - Componentes modulares con Vue.js/React
